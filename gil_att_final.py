@@ -4,30 +4,42 @@ import scipy.signal as signal
 import matplotlib.pyplot as plt
 import time
 
+# Parâmetros de áudio
 fs = 44100 # Define a taxa de amostragem 44100 heartz	
 duration = 0.2 # Define a duração de cada bit
-p = pyaudio.PyAudio() # 	
+
+# Instância do PyAudio
+p = pyaudio.PyAudio() 
+
+# Parâmetros para tratar ruídos e término do som 	
 nao_capturar = 0.002 # Não captura ruidos abaixo de 0.002, amplitude baixa 
 silence = 2 # Define uma taxa de silêncio após ler os 8 bits para saber se o emissor terminou de enviar os bits
 
+# Criação do fluxo de áudio
 stream = p.open(format=pyaudio.paFloat32, channels=1, rate=fs, input=True)
 
-
-def retificador(signal): #  Retificador de sinal, retira os sinais negativos, deixando somente os positivos
-    return np.abs(signal)
-def detector_de_envelope(sinal_retificado, fs, frequencia_de_corte=100): # Detector de envelope que recebe o sinal retificado e utiliza um filtro butterworth de 2° ordem
-    b, a = signal.butter(2, frequencia_de_corte / (fs / 2)) 
-    envelope = signal.filtfilt(b, a, sinal_retificado)
+# Retificador de sinal
+def retificador(signal):
+    return np.abs(signal) # Função do numpy que retira os sinais negativos, deixando somente os positivos
+    
+# Detector de envelope
+def detector_de_envelope(sinal_retificado, fs, frequencia_de_corte=100): # Filtro butterworth de 2° ordem
+    b, a = signal.butter(2, frequencia_de_corte / (fs / 2)) # Guarda na variável b os coeficientes do numerador do filtro e na variável a os coeficientes do denominador
+    envelope = signal.filtfilt(b, a, sinal_retificado) # Aplica o filtro construído acima das variáveis a e b e salva o resultado na variável envelope
     return envelope
-def converter(bits): # Converte o valor da tabela ASCII para o caractere correspondente 
-    byte_str = ''.join(str(bit) for bit in bits)
-    return chr(int(byte_str, 2))
+    
+# Converte o valor da tabela ASCII para o caractere correspondente 
+def converter(bits):
+    byte_str = ''.join(str(bit) for bit in bits)  # Itera sobre a lista de bits	
+    return chr(int(byte_str, 2)) # Converte o número binário no caractere correspondente
+    
 
 pacote = [] # Guarda os bits do valor transmitido pelo emissor
 receiver = False # Define se está sendo recebido um novo conjunto de 8 bits
 tempo_ultima_transmissao = time.time() # Pega o tempo da última transmissão de bits para no final poder printar a palavra 
 palavra = "" # Variável palavra inicialmente começa vazia
 
+# Loop principal
 try:
     while True:
         entrada = np.frombuffer(stream.read(int(fs * duration)), dtype=np.float32) # Lê os bits recebidos pelo emissor e os guarda num array, como são 44100 heartz e 0.2s, resulta em 8820 amostras no vetor
@@ -54,6 +66,8 @@ try:
             palavra = "" # Define a variável palavra como vazia
 except KeyboardInterrupt:
     pass
+    
+# Quando o loop é interrompido, o programa fecha o fluxo de áudio e termina a instância do PyAudio
 stream.stop_stream()
 stream.close()
 p.terminate()
