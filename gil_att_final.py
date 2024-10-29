@@ -4,7 +4,7 @@ import scipy.signal as signal
 import matplotlib.pyplot as plt
 import time
 
-fs = 44100 # Define a taxa de 44100 heartz	
+fs = 44100 # Define a taxa de amostragem 44100 heartz	
 duration = 0.2 # Define a duração de cada bit
 p = pyaudio.PyAudio() # 	
 nao_capturar = 0.002 # Não captura ruidos abaixo de 0.002, amplitude baixa 
